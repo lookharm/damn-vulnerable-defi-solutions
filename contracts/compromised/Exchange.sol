@@ -36,7 +36,7 @@ contract Exchange is ReentrancyGuard {
 
         // Price should be in [wei / NFT]
         uint256 price = oracle.getMedianPrice(token.symbol());
-        if (msg.value < price)
+        if (msg.value < price) // msg.value >= price
             revert InvalidPayment();
 
         id = token.safeMint(msg.sender);
@@ -62,7 +62,7 @@ contract Exchange is ReentrancyGuard {
         token.transferFrom(msg.sender, address(this), id);
         token.burn(id);
 
-        payable(msg.sender).sendValue(price);
+        payable(msg.sender).sendValue(price); // price == 999ETH
 
         emit TokenSold(msg.sender, id, price);
     }

@@ -46,6 +46,30 @@ describe('[Challenge] Backdoor', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // BUG: They must verify whether the proxy was created by beneficiaries or not.
+
+        // AUDIT: Can we make proxy to equal any other address when create2?
+        // function setup(
+        //     address[] calldata _owners, == alice, bob, etc. --> This will became to `walletOwner`
+        //     uint256 _threshold, == 1
+        //     address to, == 0x0 ? another
+        //     bytes calldata data, == 0x00
+        //     address fallbackHandler, == 0x0
+        //     address paymentToken, == 0x0
+        //     uint256 payment, == 0x0
+        //     address payable paymentReceiver == 0x0
+        // )
+        // `walletAddress`, an implementation of proxy must be a `singleton`:
+        // - GnosisSafe(walletAddress).getThreshold() -> retuns 1
+        // - GnosisSafe(walletAddress).getOwners() -> returns [alic, bob, etc.]
+        // - GnosisSafe(walletAddress).getStorageAt(
+        //     uint256(keccak256("fallback_manager.handler.address")),
+        //     0x20
+        // ) -> returns 0
+        // So, I will make a fake `walletAddress` by create2.
+        // TODO: Fake `walletAddress` but the logic is still the same as GnosisSafe, what can I do then?
+        // TODO: Even I am the creator of proxy but I can not add/remove/edit owners of GnosisSafe.
+
     });
 
     after(async function () {

